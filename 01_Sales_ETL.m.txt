@@ -1,0 +1,15 @@
+let
+    Source = Excel.CurrentWorkbook(){[Name="Table1"]}[Content],
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+    #"Split Column by Delimiter" = Table.SplitColumn(#"Changed Type", "Column1", Splitter.SplitTextByDelimiter(",", QuoteStyle.Csv), {"Column1.1", "Column1.2", "Column1.3", "Column1.4", "Column1.5"}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Split Column by Delimiter",{{"Column1.1", type text}, {"Column1.2", type text}, {"Column1.3", type text}, {"Column1.4", type text}, {"Column1.5", type text}}),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type1", [PromoteAllScalars=true]),
+    #"Trimmed Text" = Table.TransformColumns(#"Promoted Headers",{{"SKU", Text.Trim, type text}}),
+    #"Uppercased Text" = Table.TransformColumns(#"Trimmed Text",{{"SKU", Text.Upper, type text}}),
+    #"Replaced Value" = Table.ReplaceValue(#"Uppercased Text","$","",Replacer.ReplaceText,{"Unit_Price"}),
+    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","NULL","0",Replacer.ReplaceText,{"Quantity"}),
+    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","N/A","0",Replacer.ReplaceText,{"Quantity"}),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Replaced Value2",{{"Unit_Price", type number}, {"Quantity", Int64.Type}}),
+    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Changed Type2", {{"Order_Date", type date}}, "en-US")
+in
+    #"Changed Type with Locale"
